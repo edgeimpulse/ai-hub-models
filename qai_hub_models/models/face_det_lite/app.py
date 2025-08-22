@@ -83,9 +83,9 @@ class FaceDetLiteApp:
         img_tensor = img_tensor[np.newaxis, ...]
         # print(f"img_tensor after newaxis: {img_tensor.shape}")
         hm, box, landmark = self.model(img_tensor)
-        np.save(f"raw_data/hm_{i}.npy", hm)
-        np.save(f"raw_data/box_{i}.npy", box)
-        np.save(f"raw_data/landmark_{i}.npy", landmark)
+        # np.save(f"raw_data/hm_{i}.npy", hm)
+        # np.save(f"raw_data/box_{i}.npy", box)
+        # np.save(f"raw_data/landmark_{i}.npy", landmark)
 
         dets = detect(hm, box, landmark, threshold=0.55, nms_iou=-1, stride=8)
         # print(f"Detected {len(dets)} faces")
