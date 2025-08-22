@@ -40,6 +40,7 @@ class FaceDetLiteApp:
         | np.ndarray
         | Image.Image
         | list[Image.Image],
+        i: int
     ) -> tuple[list[list[int | float]], Image.Image]:
         """
         Return the corresponding output by running inference on input image.
@@ -60,6 +61,7 @@ class FaceDetLiteApp:
         """
         assert pixel_values_or_image is not None, "pixel_values_or_image is None"
         img = pixel_values_or_image
+        # print(f"image shape: {getattr(img, 'shape', None)}")
 
         if isinstance(img, Image.Image):
             img_array = np.asarray(img)
@@ -68,14 +70,26 @@ class FaceDetLiteApp:
         else:
             raise RuntimeError("Invalid format")
 
+
+        # print(f"raw img_array: {img_array.shape}")
         img_array = img_array.astype("float32") / 255.0
+        # print(f"img_array after div 255.0 : {img_array.shape}")
         img_array = img_array[np.newaxis, ...]
+        # print(f"img_array after newaxis: {img_array.shape}")
         img_tensor = torch.Tensor(img_array)
         img_tensor = img_tensor[:, :, :, -1]
+        # print(f"img_tensor after -1: {img_tensor.shape}")
 
         img_tensor = img_tensor[np.newaxis, ...]
+        # print(f"img_tensor after newaxis: {img_tensor.shape}")
         hm, box, landmark = self.model(img_tensor)
+        np.save(f"raw_data/hm_{i}.npy", hm)
+        np.save(f"raw_data/box_{i}.npy", box)
+        np.save(f"raw_data/landmark_{i}.npy", landmark)
+
         dets = detect(hm, box, landmark, threshold=0.55, nms_iou=-1, stride=8)
+        # print(f"Detected {len(dets)} faces")
+        # print(f"Detected faces: {dets}")
         res = []
         for n in range(0, len(dets)):
             xmin, ymin, w, h = dets[n].xywh
@@ -118,6 +132,7 @@ class FaceDetLiteApp:
                 B = H - 1 + T
 
             res.append([L, T, W, H, score])
+        # print(f"Bounding boxes: {res}")
 
         np_out = np.asarray(img)
         np_out = torch.tensor(np_out).byte().numpy()
